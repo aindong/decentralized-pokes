@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
-import Image from "next/image";
+import ConfettiGenerator from "confetti-js";
 import styles from "../styles/Home.module.css";
 import { ethers } from "ethers";
 import PokeJSON from "../abi/Poke.json";
@@ -10,6 +10,7 @@ export default function Home() {
   const [poking, setPoking] = useState(false);
   const [pokes, setPokes] = useState([]);
   const [pokeMessage, setPokeMessage] = useState("");
+  const [success, setSuccess] = useState(false);
   const contractAddress = "0x326938Cbb45E581e1FCa52184f99B320c8afDB46";
   const contractABI = PokeJSON.abi;
 
@@ -83,12 +84,14 @@ export default function Home() {
 
         // Create a new poke
         setPoking(true);
+        setSuccess(false);
         const pokeTxn = await pokeContract.poke(pokeMessage);
         console.log("Minting...", pokeTxn.hash);
 
         await pokeTxn.wait();
         console.log("Minted -- ", pokeTxn.hash);
 
+        setSuccess(true);
         setPoking(false);
         count = await pokeContract.getTotalPokes();
         console.log("Retrieved total poke count...", count.toNumber());
@@ -131,6 +134,14 @@ export default function Home() {
   useEffect(() => {
     // check if wallet is connected
     checkIfWalletConnected();
+  }, []);
+
+  useEffect(() => {
+    const confettiSettings = { target: "my-canvas" };
+    const confetti = new ConfettiGenerator(confettiSettings);
+    confetti.render();
+
+    return () => confetti.clear();
   }, []);
 
   return (
@@ -200,6 +211,15 @@ export default function Home() {
             </>
           )}
         </div>
+        <canvas
+          id="my-canvas"
+          style={{
+            visibility: success ? "inherit" : "hidden",
+            zIndex: -1,
+            position: "absolute",
+            left: 0,
+          }}
+        ></canvas>
       </main>
     </div>
   );
