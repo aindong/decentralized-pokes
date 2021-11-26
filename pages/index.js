@@ -85,7 +85,9 @@ export default function Home() {
         // Create a new poke
         setPoking(true);
         setSuccess(false);
-        const pokeTxn = await pokeContract.poke(pokeMessage);
+        const pokeTxn = await pokeContract.poke(pokeMessage, {
+          gasLimit: 300000,
+        });
         console.log("Minting...", pokeTxn.hash);
 
         await pokeTxn.wait();
