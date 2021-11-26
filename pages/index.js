@@ -8,7 +8,9 @@ import PokeJSON from "../abi/Poke.json";
 export default function Home() {
   const [currentAccount, setCurrentAccount] = useState(null);
   const [poking, setPoking] = useState(false);
-  const contractAddress = "0xBCcD391ccced1e6c98727b9C77Fc957f358464A2";
+  const [pokes, setPokes] = useState([]);
+  const [pokeMessage, setPokeMessage] = useState("");
+  const contractAddress = "0x326938Cbb45E581e1FCa52184f99B320c8afDB46";
   const contractABI = PokeJSON.abi;
 
   const checkIfWalletConnected = async () => {
@@ -31,6 +33,7 @@ export default function Home() {
       const account = accounts[0];
       console.log("Wallet Connected with address: ", account);
       setCurrentAccount(account);
+      await getAllPokes();
     } catch (error) {
       console.log(error);
     }
@@ -80,7 +83,7 @@ export default function Home() {
 
         // Create a new poke
         setPoking(true);
-        const pokeTxn = await pokeContract.poke();
+        const pokeTxn = await pokeContract.poke(pokeMessage);
         console.log("Minting...", pokeTxn.hash);
 
         await pokeTxn.wait();
@@ -93,6 +96,36 @@ export default function Home() {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const getAllPokes = async () => {
+    try {
+      const { ethereum } = window;
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const pokeContract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+
+      const pokes = await pokeContract.getAllPokes();
+      let pokesCleaned = [];
+      pokes.forEach((poke) => {
+        pokesCleaned.push({
+          address: poke.poker,
+          timestamp: new Date(poke.timestamp * 1000),
+          message: poke.message,
+        });
+      });
+      setPokes(pokesCleaned);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handlePokeMessageChange = (event) => {
+    setPokeMessage(event.target.value);
   };
 
   useEffect(() => {
@@ -128,6 +161,10 @@ export default function Home() {
             </button>
           ) : (
             <>
+              <textarea
+                style={{ width: "100%", height: 150 }}
+                onChange={handlePokeMessageChange}
+              />
               <button
                 disabled={poking}
                 style={{ width: "100%", cursor: "pointer", height: 80 }}
@@ -140,6 +177,26 @@ export default function Home() {
               <p style={{ textAlign: "center" }}>
                 Connected Address: {currentAccount}
               </p>
+
+              <div style={{ marginTop: 40 }}>
+                <h2 style={{ textAlign: "center" }}>Previous Pokes</h2>
+                {pokes
+                  .sort((a, b) => b.timestamp - a.timestamp)
+                  .map((poke, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        backgroundColor: "OldLace",
+                        marginTop: "16px",
+                        padding: "8px",
+                      }}
+                    >
+                      <div>Address: {poke.address}</div>
+                      <div>Time: {poke.timestamp.toString()}</div>
+                      <div>Message: {poke.message}</div>
+                    </div>
+                  ))}
+              </div>
             </>
           )}
         </div>
