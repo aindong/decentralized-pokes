@@ -11,7 +11,7 @@ export default function Home() {
   const [pokes, setPokes] = useState([]);
   const [pokeMessage, setPokeMessage] = useState("");
   const [success, setSuccess] = useState(false);
-  const contractAddress = "0xF043ED76dea912A05a36eA726dA3832edbe97406";
+  const contractAddress = "0xcB4e716eDe197649a10a6241a3d3FcC59A20C46a";
   const contractABI = PokeJSON.abi;
 
   const checkIfWalletConnected = async () => {
