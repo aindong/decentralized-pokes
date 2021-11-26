@@ -99,6 +99,7 @@ export default function Home() {
         console.log("Retrieved total poke count...", count.toNumber());
       }
     } catch (error) {
+      setPoking(false);
       console.log(error);
     }
   };
@@ -169,8 +170,6 @@ export default function Home() {
         ]);
       });
     }
-
-    return () => pokeContract.removeAllListeners();
   }, [contractABI]);
 
   return (
