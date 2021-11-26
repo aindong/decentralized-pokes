@@ -144,6 +144,33 @@ export default function Home() {
     return () => confetti.clear();
   }, []);
 
+  useEffect(() => {
+    const { ethereum } = window;
+    let pokeContract = null;
+    if (ethereum) {
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      let pokeContract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+
+      pokeContract.on("NewPoke", (poker, timestamp, message) => {
+        setPokes((pokes) => [
+          ...pokes,
+          {
+            address: poker,
+            timestamp: new Date(timestamp * 1000),
+            message: message,
+          },
+        ]);
+      });
+    }
+
+    return () => pokeContract.removeAllListeners();
+  }, [contractABI]);
+
   return (
     <div className={styles.container}>
       <Head>
