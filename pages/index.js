@@ -2,9 +2,14 @@ import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import styles from "../styles/Home.module.css";
+import { ethers } from "ethers";
+import PokeJSON from "../abi/Poke.json";
 
 export default function Home() {
   const [currentAccount, setCurrentAccount] = useState(null);
+  const [poking, setPoking] = useState(false);
+  const contractAddress = "0xBCcD391ccced1e6c98727b9C77Fc957f358464A2";
+  const contractABI = PokeJSON.abi;
 
   const checkIfWalletConnected = async () => {
     try {
@@ -57,6 +62,39 @@ export default function Home() {
     }
   };
 
+  const poke = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const pokeContract = new ethers.Contract(
+          contractAddress,
+          contractABI,
+          signer
+        );
+
+        let count = await pokeContract.getTotalPokes();
+        console.log("Retrieved total poke count...", count.toNumber());
+
+        // Create a new poke
+        setPoking(true);
+        const pokeTxn = await pokeContract.poke();
+        console.log("Minting...", pokeTxn.hash);
+
+        await pokeTxn.wait();
+        console.log("Minted -- ", pokeTxn.hash);
+
+        setPoking(false);
+        count = await pokeContract.getTotalPokes();
+        console.log("Retrieved total poke count...", count.toNumber());
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     // check if wallet is connected
     checkIfWalletConnected();
@@ -65,8 +103,8 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>My Wave Portal</title>
-        <meta name="description" content="Send waves on-chain" />
+        <title>My Poke Portal</title>
+        <meta name="description" content="Send pokes on-chain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -91,10 +129,13 @@ export default function Home() {
           ) : (
             <>
               <button
+                disabled={poking}
                 style={{ width: "100%", cursor: "pointer", height: 80 }}
-                onClick={null}
+                onClick={poke}
               >
-                <p style={{ fontSize: 16 }}>👉 Poke Me 👈</p>
+                <p style={{ fontSize: 16 }}>
+                  {poking ? "Poking..." : "👉 Poke Me 👈"}
+                </p>
               </button>
               <p style={{ textAlign: "center" }}>
                 Connected Address: {currentAccount}
